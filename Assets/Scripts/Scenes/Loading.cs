@@ -39,7 +39,9 @@ public class Loading : MonoBehaviour
     {
         var controller = Locator.Get<IFlightController>();
         controller.Init();
+        var config = Locator.Get<IConfig>();
 
+        _runwayCount = config.Get().RunwayCount;
         FlightPoolInit();
 
     }

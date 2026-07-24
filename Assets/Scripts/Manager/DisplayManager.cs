@@ -29,7 +29,7 @@ namespace Assets.Scripts.Manager
 
         public DisplayManager(IFlightController controller, IUIManager uiManager, ILogSource logSource = null)
         {
-            //logSource.OnLog += AddLog;
+            logSource.OnLog += AddLog;
             _uiManager = uiManager;
             _controller = controller;
             //_controller.OnScheduleUpdated += UpdateSchedule;
@@ -167,14 +167,14 @@ namespace Assets.Scripts.Manager
         //}
 
 
-        //private void AddLog(string newLog)
-        //{
-        //    lock (logLock)
-        //    {
-        //        logBuffer.Add(newLog);
-        //        if (logBuffer.Count > 50) logBuffer.RemoveAt(0);
-        //    }
-        //}
+        private void AddLog(string newLog)
+        {
+            lock (_logLock)
+            {
+                _logBuffer.Add(newLog);
+                if (_logBuffer.Count > 50) _logBuffer.RemoveAt(0);
+            }
+        }
 
 
         //private async void HandleYesterdayDiary()

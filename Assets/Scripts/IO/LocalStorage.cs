@@ -17,7 +17,7 @@ namespace Assets.Scripts.IO
 
         public T Load<T>(string fileName, T defaultData = default)
         {
-            string filePath = _saveDirectory + fileName;
+            string filePath = _saveDirectory + "/" + fileName; 
             if (!File.Exists(filePath))
                     return defaultData;
 
@@ -30,7 +30,7 @@ namespace Assets.Scripts.IO
 
         public void Save<T>(string fileName, T data)
         {
-            string filePath = _saveDirectory + fileName;
+            string filePath = _saveDirectory + "/" + fileName;
             //string jsonData = JsonUtility.ToJson(data);
             string jsonData = JsonConvert.SerializeObject(data, Formatting.Indented);
             Debug.Log(jsonData);
@@ -40,7 +40,7 @@ namespace Assets.Scripts.IO
 
         public void Append<T>(string fileName, T data)
         {
-            string filePath = _saveDirectory + fileName;
+            string filePath = _saveDirectory + "/" + fileName;
             string jsonData = JsonConvert.SerializeObject(data, Formatting.Indented);
             Debug.Log(jsonData);
             File.AppendAllText(filePath, jsonData);

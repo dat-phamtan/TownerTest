@@ -21,10 +21,14 @@ namespace Assets.Scripts.Config
         {
             //log
             _configData = _storage.Load<Configuration>("Config.json");
-            if (_configData == null)
+            if (_configData != null)
                 logger.Log("[SYSTEM] Load config success");
             else
+            {
+                _configData = new Configuration(4, 1.5f, new Durations(20, 25), new MaintenancePeriod(2, 30, 5, 15));
+                _storage.Save("Config.json", _configData);
                 logger.Log("[SYSTEM] Load default");
+            }
         }
 
         //just for test

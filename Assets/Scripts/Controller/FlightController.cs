@@ -69,6 +69,16 @@ namespace Assets.Scripts.Controller
             return _screenData;
         }
 
+        //public int GetRunwayCount()
+        //{
+        //    //if (_runwayManager.GetRunways() == default)
+        //    //{
+        //    //    return 0;
+        //    //}
+        //    return;
+        //}
+
+
         // INITIALIZE
         public FlightController(IConfig config, ILandingGenerator generator, IStorageManager storageManager, IRunwayManager runwayManager, ILogger logger, ScreenData screenData, int initHour, int initMinute)
         {
@@ -85,6 +95,7 @@ namespace Assets.Scripts.Controller
 
         public void Init()
         {
+            //Debug.WriteLine("________--");
             _config.Load(_logger);
             _runwayManager.Init(_config.Get().RunwayCount);
             OnRunwayInit?.Invoke();
@@ -106,7 +117,7 @@ namespace Assets.Scripts.Controller
             var endMaintenance = new TimeSpan(maintenancePeriod.MaintenanceEndHour, maintenancePeriod.MaintenanceEndMinute, 0);
             var target = new TimeSpan(_initHour, _initMinute, 0);
 
-            if (IsTimeOfDayBetween(target, startMaintenance, endMaintenance))
+            if (!IsTimeOfDayBetween(target, startMaintenance, endMaintenance))
             {
                 _maintenanceMode = true;
                 _currentState = new NormalAirportState();

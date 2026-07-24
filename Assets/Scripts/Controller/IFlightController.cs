@@ -21,5 +21,6 @@ namespace Assets.Scripts.Controller
         public Runway[]? GetRunways();
         public bool IsMaintenanceMode();
         public ScreenData GetScreenData();
+        //public int GetRunwayCount();
     }
 }

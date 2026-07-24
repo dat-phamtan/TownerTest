@@ -1,4 +1,5 @@
 ﻿#nullable enable
+//using UnityEngine;
 using Assets.Scripts.Config;
 using Assets.Scripts.Data;
 using Assets.Scripts.Entity;
@@ -38,7 +39,7 @@ namespace Assets.Scripts.Controller
         private readonly ILandingGenerator _generator;
         private readonly IStorageManager _storageManager;
         private IAirportState? _currentState;
-        private readonly ILogger _logger;
+        private readonly Logger.ILogger _logger;
         private float _timeScale = 1000.0f;
 
         private ScreenData _screenData;
@@ -80,7 +81,7 @@ namespace Assets.Scripts.Controller
 
 
         // INITIALIZE
-        public FlightController(IConfig config, ILandingGenerator generator, IStorageManager storageManager, IRunwayManager runwayManager, ILogger logger, ScreenData screenData, int initHour, int initMinute)
+        public FlightController(IConfig config, ILandingGenerator generator, IStorageManager storageManager, IRunwayManager runwayManager, Logger.ILogger logger, ScreenData screenData, int initHour, int initMinute)
         {
             _initHour = initHour;
             _initMinute = initMinute;
@@ -99,10 +100,10 @@ namespace Assets.Scripts.Controller
             _config.Load(_logger);
             _runwayManager.Init(_config.Get().RunwayCount);
             OnRunwayInit?.Invoke();
-            SimpleClock.Instance.InitClock(_initHour, _initMinute, _timeScale, _config.Get().MaintenancePeriod);
+            SimpleClock.Instance.InitClock(_initHour, _initMinute, _config.Get().TimeScale, _config.Get().MaintenancePeriod);
 
             MaintenanceModeInit();
-
+  
             _runwayManager.OnBecomeAvailable += ProcessQueues;
             SimpleClock.Instance.OnTick += HandleClockTick;
             SimpleClock.Instance.OnMaintenanceStart += HandleMaintenanceStart;
@@ -127,6 +128,7 @@ namespace Assets.Scripts.Controller
                 _maintenanceMode = false;
                 _currentState = new MaintenanceAirportState();
             }
+            
             OnStatusChanged?.Invoke(!_maintenanceMode);
         }
 

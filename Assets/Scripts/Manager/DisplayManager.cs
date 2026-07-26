@@ -1,10 +1,14 @@
 ﻿using Assets.Scripts.Controller;
 using Assets.Scripts.Data;
+using Assets.Scripts.Entity;
+using Assets.Scripts.FlightPool;
 using Assets.Scripts.Logger;
 using Assets.Scripts.Scenes;
 using Assets.Scripts.Unity;
+using Assets.Scripts.Utility;
 using ControlTowner.Utility;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,8 +23,14 @@ namespace Assets.Scripts.Manager
     {
         private IFlightController _controller;
         private IUIManager _uiManager;
+        private IFlightPool _flightPool;
+        private ScreenData _screenData;
         private List<Flight> _schedule;
-        private GameObject[] runways;
+        private GameObject[] _runways;
+        //temp
+        private List<float> _runwayXPos;
+        //private int _screenHeight;
+        //
         private readonly List<string> _logBuffer = new();
 
         private static readonly object _logLock = new();
@@ -32,12 +42,41 @@ namespace Assets.Scripts.Manager
             logSource.OnLog += AddLog;
             _uiManager = uiManager;
             _controller = controller;
-            //_controller.OnScheduleUpdated += UpdateSchedule;
+            _runwayXPos = Locator.Get<List<float>>();
+            _flightPool = Locator.Get<IFlightPool>();
+            _screenData = Locator.Get<ScreenData>();
+            //_controller.OnScheduleUpdated += HandleSchedule;
             //_controller.OnLogDiary += HandleYesterdayDiary;
             _controller.OnStatusChanged += HandleStatusChanged;
             _controller.OnRunwayInit += HandleRunwayInit;
             _controller.OnLandingQueueChanged += HandleLandingQueueChanged;
             _controller.OnTakeoffQueueChanged += HandleTakeoffQueueChanged;
+
+
+            _controller.OnPreLanding += HandlePreLanding;
+            _controller.OnFlightLanding += HandleFlightLanding;
+            
+        }
+
+        //temp
+        private void HandlePreLanding(Runway runway)
+        {
+            var position = new Vector3(runway.Position.x, _screenData.ScreenHeight / 2, 0);
+            //var flightView = _flightPool.GetFlight(position, , )
+
+
+        }
+
+        //private IEnumerator HoldAndLandRoutine()
+
+        private void HandleFlightLanding(Runway runway)
+        {
+            //float xPos = _runwayXPos[runway.Id];
+            //if (runway.CurrentFlight.Type == FlightType.Landing)
+            //{
+            //    var position = Vector3.(xPos, -_screenHeight / 2, 0);
+
+            //}
         }
 
         private void HandleTakeoffQueueChanged(int queueCount)
@@ -60,13 +99,7 @@ namespace Assets.Scripts.Manager
 
         private void HandleRunwayInit()
         {
-            Debug.Log("-------------");
-            runways = GameObject.FindGameObjectsWithTag("Runway");
-            Debug.Log(runways.Length);
-            foreach (GameObject go in runways)
-            {
-                go.SetActive(true);
-            }
+            _uiManager.ActiveRunways();
         }
 
         //public void Start()

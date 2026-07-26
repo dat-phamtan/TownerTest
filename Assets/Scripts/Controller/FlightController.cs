@@ -40,9 +40,8 @@ namespace Assets.Scripts.Controller
         private readonly IStorageManager _storageManager;
         private IAirportState? _currentState;
         private readonly Logger.ILogger _logger;
-        private float _timeScale = 1000.0f;
+        //private float _timeScale = 1000.0f;
 
-        private ScreenData _screenData;
         private List<Flight> _todaySchedule = new();
         private List<Flight> _unfinishedSchedule = new();
 
@@ -53,6 +52,16 @@ namespace Assets.Scripts.Controller
         public event Action? OnRunwayInit;
         public event Action<int>? OnLandingQueueChanged;
         public event Action<int>? OnTakeoffQueueChanged;
+
+        public event Action<Runway>? OnPreLanding;
+        public event Action? OnPreTakeoff;
+
+        public event Action<Runway>? OnFlightLanding;
+        public event Action<int>? OnFlightTakeoff;
+
+        //maybe no need
+        public event Action? OnPostLanding;
+        public event Action? OnPostTakeoff;
 
         public bool IsMaintenanceMode()
         {
@@ -65,23 +74,15 @@ namespace Assets.Scripts.Controller
             return _runwayManager.GetRunways();
         }
 
-        public ScreenData GetScreenData()
-        {
-            return _screenData;
-        }
-
-        //public int GetRunwayCount()
+        //public ScreenData GetScreenData()
         //{
-        //    //if (_runwayManager.GetRunways() == default)
-        //    //{
-        //    //    return 0;
-        //    //}
-        //    return;
+        //    return _screenData;
         //}
 
+ 
 
         // INITIALIZE
-        public FlightController(IConfig config, ILandingGenerator generator, IStorageManager storageManager, IRunwayManager runwayManager, Logger.ILogger logger, ScreenData screenData, int initHour, int initMinute)
+        public FlightController(IConfig config, ILandingGenerator generator, IStorageManager storageManager, IRunwayManager runwayManager, Logger.ILogger logger, int initHour, int initMinute)
         {
             _initHour = initHour;
             _initMinute = initMinute;
@@ -90,20 +91,23 @@ namespace Assets.Scripts.Controller
             _storageManager = storageManager;
             _runwayManager = runwayManager;
             _logger = logger;
-            _screenData = screenData;
         }
 
-
-        public void Init()
+        public void LoadData()
         {
-            //Debug.WriteLine("________--");
             _config.Load(_logger);
             _runwayManager.Init(_config.Get().RunwayCount);
-            OnRunwayInit?.Invoke();
+            
+            MaintenanceModeInit();
+        }
+
+        public void StartSimulation()
+        {
             SimpleClock.Instance.InitClock(_initHour, _initMinute, _config.Get().TimeScale, _config.Get().MaintenancePeriod);
 
-            MaintenanceModeInit();
-  
+            OnRunwayInit?.Invoke();
+            OnStatusChanged?.Invoke(!_maintenanceMode);
+
             _runwayManager.OnBecomeAvailable += ProcessQueues;
             SimpleClock.Instance.OnTick += HandleClockTick;
             SimpleClock.Instance.OnMaintenanceStart += HandleMaintenanceStart;
@@ -118,7 +122,7 @@ namespace Assets.Scripts.Controller
             var endMaintenance = new TimeSpan(maintenancePeriod.MaintenanceEndHour, maintenancePeriod.MaintenanceEndMinute, 0);
             var target = new TimeSpan(_initHour, _initMinute, 0);
 
-            if (!IsTimeOfDayBetween(target, startMaintenance, endMaintenance))
+            if (IsTimeOfDayBetween(target, startMaintenance, endMaintenance))
             {
                 _maintenanceMode = true;
                 _currentState = new NormalAirportState();
@@ -128,8 +132,6 @@ namespace Assets.Scripts.Controller
                 _maintenanceMode = false;
                 _currentState = new MaintenanceAirportState();
             }
-            
-            OnStatusChanged?.Invoke(!_maintenanceMode);
         }
 
 
@@ -196,6 +198,7 @@ namespace Assets.Scripts.Controller
             lock (_queueLock)
             {
                 _takeoffQueue.Enqueue(flight);
+                OnTakeoffQueueChanged?.Invoke(_takeoffQueue.Count);
             }
             _logger.Log($"[SYSTEM] Takeoff queue append: {flight.FlightSchedule.Code}");
 
@@ -207,6 +210,7 @@ namespace Assets.Scripts.Controller
             lock (_queueLock)
             {
                 _landingQueue.Enqueue(flight);
+                OnLandingQueueChanged?.Invoke(_landingQueue.Count);
             }
             _logger.Log($"[SYSTEM] Landing queue append: {flight.FlightSchedule.Code}");
             ProcessQueues();
@@ -228,15 +232,24 @@ namespace Assets.Scripts.Controller
 
                         Flight? flight = null;
                         if (_landingQueue.TryDequeue(out Flight? lf))
+                        {
                             flight = lf;
+                            OnLandingQueueChanged?.Invoke(_landingQueue.Count);
+                        }
+                            
                         else if (_takeoffQueue.TryDequeue(out Flight? tf))
+                        {
                             flight = tf;
+                            OnTakeoffQueueChanged?.Invoke(_takeoffQueue.Count);
+                        }
 
                         if (flight != null && runway.AssignFlight(flight))
                         {
                             float landingDuration = _config.Get().Durations.LandingDuration;
                             float takeoffDuration = _config.Get().Durations.TakeoffDuration;
                             runway.RealDuration = (flight.Type == FlightType.Landing) ? landingDuration : takeoffDuration;
+
+                            OnFlightLanding?.Invoke(runway); //prelanding/preta
                             ExecuteFlight(runway, flight);
                         }
                     }

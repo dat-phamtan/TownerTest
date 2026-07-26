@@ -2,6 +2,7 @@
 using Assets.Scripts.Unity;
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 using System.Text;
 
 namespace Assets.Scripts.Entity
@@ -12,14 +13,21 @@ namespace Assets.Scripts.Entity
         public bool IsOccupied { get; set; } = false;
         public Flight? CurrentFlight { get; set; }
         public float RealDuration { get; set; }
+        public Vector3 Position { get; set; }
 
         private readonly object _lock = new();
+
         public Action<bool>? OnStateChanged;
 
         public Runway(int id, Action<bool>? onStateChanged = null)
         {
             Id = id;
             OnStateChanged = onStateChanged;
+        }
+
+        public void SetPosition(Vector3 pos)
+        {
+            Position = pos;
         }
 
         public bool AssignFlight(Flight flight)

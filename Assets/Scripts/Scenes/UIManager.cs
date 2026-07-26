@@ -1,7 +1,9 @@
+using Assets.Scripts.FlightPool;
 using Assets.Scripts.Scenes;
 using ControlTowner.Utility;
 using System;
 using TMPro;
+using UnityEditor.VersionControl;
 using UnityEngine;
 
 public class UIManager : MonoBehaviour, IUIManager
@@ -11,6 +13,8 @@ public class UIManager : MonoBehaviour, IUIManager
     public TextMeshProUGUI status;
     public TextMeshProUGUI landingQueueNum;
     public TextMeshProUGUI takeoffQueueNum;
+    private IFlightPool _flightPool;
+    //public GameObject runway;
 
     public void ChangeLandingQueue(string num)
     {
@@ -25,6 +29,20 @@ public class UIManager : MonoBehaviour, IUIManager
     public void ChangeTakeoffQueue(string num)
     {
         takeoffQueueNum.text = num;
+    }
+
+    public void ActiveRunways()
+    {
+        GameObject container = GameObject.Find("Container");
+        if (container == null) return;
+
+        foreach (Transform child in container.transform)
+        {
+            if (child.name.Contains("Runway"))
+            {
+                child.gameObject.SetActive(true);
+            }
+        }
     }
 
     private void Awake()

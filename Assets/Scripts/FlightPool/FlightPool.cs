@@ -29,7 +29,7 @@ namespace Assets.Scripts.FlightPool
             }
         }
 
-        public FlightView GetFlight(UnityEngine.Vector3 position, UnityEngine.Quaternion rotation)
+        public FlightView GetFlight(UnityEngine.Vector3 position, UnityEngine.Quaternion rotation, float speed)
         {
             FlightView flight;
 

@@ -8,9 +8,11 @@ using Assets.Scripts.Logger;
 using Assets.Scripts.Manager;
 using Assets.Scripts.Utility;
 using System;
+using System.Collections;
 using System.Data.SqlTypes;
 using System.IO;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -18,33 +20,33 @@ using UnityEngine.UI;
 public class MainMenu : MonoBehaviour
 {
     public Button _startButton;
-    private ScreenData _screenData;
-    private EventLogger _eventLogger;
+    public GameObject loadingSprite;
 
     private void Awake()
     {
-        _eventLogger = new EventLogger();
-        Locator.Register<Assets.Scripts.Logger.ILogger>(_eventLogger);
-        Locator.Register<Assets.Scripts.Logger.ILogSource>(_eventLogger);
+        var sceenData = new ScreenData(Screen.width, Screen.height);
+        Locator.Register<ScreenData>(sceenData);
 
-        _screenData = new ScreenData(Screen.width, Screen.height);
+        var eventLogger = new EventLogger();
+        Locator.Register<Assets.Scripts.Logger.ILogger>(eventLogger);
+        Locator.Register<Assets.Scripts.Logger.ILogSource>(eventLogger);
 
         IStorage storage = new LocalStorage();
-        Locator.Register(storage);
+        //Locator.Register(storage);
 
         ILandingGenerator generator = new RandomLandingGenerator();
-        Locator.Register(generator);
+        //Locator.Register(generator);
 
         IConfig config = new SimulationConfig(storage);
         Locator.Register(config);
 
         IStorageManager storageManager = new FileStorageManager(storage);
-        Locator.Register(storageManager);
+        //Locator.Register(storageManager);
 
         IRunwayManager runwayManager = new RunwayManager();
         Locator.Register(runwayManager);
 
-        IFlightController flightController = new FlightController(config, generator, storageManager, runwayManager, _eventLogger, _screenData, 5, 30);
+        IFlightController flightController = new FlightController(config, generator, storageManager, runwayManager, eventLogger, 5, 30);
         Locator.Register(flightController);
 
     }
@@ -54,8 +56,25 @@ public class MainMenu : MonoBehaviour
         _startButton.onClick.AddListener(HandleStartButton);
     }
 
+    private void Update()
+    {
+        
+    }
+
     private void HandleStartButton()
     {
-        SceneManager.LoadScene("Loading");
+        StartCoroutine(LoadScene());
+    }
+
+
+    IEnumerator LoadScene()
+    {
+        loadingSprite.SetActive(true);
+        AsyncOperation asyncOperation = SceneManager.LoadSceneAsync("Loading");
+        while (!asyncOperation.isDone)
+        {
+            loadingSprite.transform.Rotate(500f * Time.deltaTime * Vector3.back);
+            yield return null;
+        }
     }
 }

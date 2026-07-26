@@ -17,10 +17,21 @@ namespace Assets.Scripts.Controller
         public event Action<int>? OnLandingQueueChanged;
         public event Action<int>? OnTakeoffQueueChanged;
 
-        public void Init();
+        public event Action<Runway>? OnPreLanding;
+        public event Action? OnPreTakeoff;
+
+        public event Action<Runway>? OnFlightLanding;
+        public event Action<int>? OnFlightTakeoff;
+
+        //maybe no need
+        public event Action? OnPostLanding;
+        public event Action? OnPostTakeoff;
+
+        public void LoadData();
+        public void StartSimulation();
         public Runway[]? GetRunways();
         public bool IsMaintenanceMode();
-        public ScreenData GetScreenData();
+        //public ScreenData GetScreenData();
         //public int GetRunwayCount();
     }
 }

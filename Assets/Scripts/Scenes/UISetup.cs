@@ -13,5 +13,6 @@ public class UISetup : MonoBehaviour
         var iLogSource = Locator.Get<Assets.Scripts.Logger.ILogSource>();
         var controller = Locator.Get<IFlightController>();
         _displayManager = new DisplayManager(controller, uiManager, iLogSource);
+        controller.StartSimulation();
     }
 }

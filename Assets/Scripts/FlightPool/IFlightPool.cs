@@ -7,7 +7,8 @@ namespace Assets.Scripts.FlightPool
 {
     public interface IFlightPool
     {
-        public FlightView GetFlight(UnityEngine.Vector3 position, UnityEngine.Quaternion rotation);
+        public void PoolInit(int count);
+        public FlightView GetFlight(UnityEngine.Vector3 position, UnityEngine.Quaternion rotation, float speed);
         public void ReleaseFlight(FlightView flight);
     }
 }

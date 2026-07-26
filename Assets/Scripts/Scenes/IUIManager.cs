@@ -9,5 +9,6 @@ namespace Assets.Scripts.Scenes
         public void ChangeStatus(string statusStr);
         public void ChangeLandingQueue(string num);
         public void ChangeTakeoffQueue(string num);
+        public void ActiveRunways();
     }
 }

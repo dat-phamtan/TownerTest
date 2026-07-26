@@ -19,12 +19,13 @@ namespace Assets.Scripts.FlightPool
             _availableFlights = new Queue<FlightView>();
         }
 
-        public void PoolInit(int count)
+        public void PoolInit(int count, float scale)
         {
             for (int i = 0; i < count; i++)
             {
                 FlightView newFlight = CreateNewFlight();
                 newFlight.gameObject.SetActive(false);
+                newFlight.transform.localScale = UnityEngine.Vector3.one * scale;
                 _availableFlights.Enqueue(newFlight);
             }
         }

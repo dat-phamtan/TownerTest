@@ -29,6 +29,9 @@ public class Loading : MonoBehaviour
 
     public float runwayWidth = 1.8f;
     public float runwayHeight = 11.5f;
+    public float planeWidth = 4.9f;
+    public float planeHeight = 5.1f;
+
     private readonly int _screenWidth = Screen.width;
     private readonly int _screenHeight = Screen.height;
     public float visualLoadDelta = 0.5f;
@@ -106,9 +109,9 @@ public class Loading : MonoBehaviour
         }
 
         // instantiate plane pool
+        _flightPool.PoolInit(_numFlightPool, runwayWidth/planeWidth);
         for (int i = 0; i < _numFlightPool; i++)
         {
-            _flightPool.PoolInit(_numFlightPool);
             actualprogress += (float)(0.15 * (i + 1)/ _numFlightPool);
             if (i % 5 == 0) yield return null;
         }

@@ -249,7 +249,7 @@ namespace Assets.Scripts.Controller
                             float takeoffDuration = _config.Get().Durations.TakeoffDuration;
                             runway.RealDuration = (flight.Type == FlightType.Landing) ? landingDuration : takeoffDuration;
 
-                            OnFlightLanding?.Invoke(runway); //prelanding/preta
+                            OnPreLanding?.Invoke(runway); //prelanding/preta
                             ExecuteFlight(runway, flight);
                         }
                     }

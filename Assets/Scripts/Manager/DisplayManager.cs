@@ -62,7 +62,7 @@ namespace Assets.Scripts.Manager
         private void HandlePreLanding(Runway runway)
         {
             var position = new Vector3(runway.Position.x, _screenData.ScreenHeight / 2, 0);
-            //var flightView = _flightPool.GetFlight(position, , )
+            var flightView = _flightPool.GetFlight(position, Quaternion.identity, 10f);
 
 
         }

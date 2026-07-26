@@ -54,14 +54,13 @@ namespace Assets.Scripts.Controller
         public event Action<int>? OnTakeoffQueueChanged;
 
         public event Action<Runway>? OnPreLanding;
-        public event Action? OnPreTakeoff;
+        public event Action<Runway>? OnPreTakeoff;
 
         public event Action<Runway>? OnFlightLanding;
-        public event Action<int>? OnFlightTakeoff;
+        public event Action<Runway>? OnFlightTakeoff;
 
-        //maybe no need
-        public event Action? OnPostLanding;
-        public event Action? OnPostTakeoff;
+        public event Action<Runway>? OnPostLanding;
+        public event Action<Runway>? OnPostTakeoff;
 
         public bool IsMaintenanceMode()
         {
@@ -249,7 +248,11 @@ namespace Assets.Scripts.Controller
                             float takeoffDuration = _config.Get().Durations.TakeoffDuration;
                             runway.RealDuration = (flight.Type == FlightType.Landing) ? landingDuration : takeoffDuration;
 
-                            OnPreLanding?.Invoke(runway); //prelanding/preta
+                            if (flight.Type == FlightType.Landing)
+                                OnPreLanding?.Invoke(runway);
+                            else
+                                OnPreTakeoff?.Invoke(runway);
+
                             ExecuteFlight(runway, flight);
                         }
                     }
@@ -260,19 +263,24 @@ namespace Assets.Scripts.Controller
 
         private void ExecuteFlight(Runway runway, Flight flight)
         {
-            flight.OnRequestConfirmation += ATCHandleFlightConfirm;
+            flight.OnRequestConfirmation = (f) => ATCHandleFlightConfirm(runway, f);
             flight.OnActionCompleted += ATCHandleFlightComplete;
             Task.Run(() => flight.ExecuteActionAsync(runway, runway.RealDuration));
         }
 
 
-        private async Task ATCHandleFlightConfirm(Flight flight)
+        private async Task ATCHandleFlightConfirm(Runway runway, Flight flight)
         {
-            if (flight.Type == FlightType.Landing) 
+            if (flight.Type == FlightType.Landing)
+            {
                 _currentState?.HandleLanding(flight, _logger);
-            else 
+                OnFlightLanding?.Invoke(runway);
+            }
+            else
+            {
                 _currentState?.HandleTakeoff(flight, _logger);
-
+                OnFlightTakeoff?.Invoke(runway);
+            }
             await Task.CompletedTask;
         }
     
@@ -286,6 +294,12 @@ namespace Assets.Scripts.Controller
             DateTime time = SimpleClock.Instance.SimulatedTime;
             var flightDiary = new FlightDiary(flight.FlightSchedule.Code, runway.Id, flightType, time);
             _storageManager.SaveDailyLog(flightDiary);
+
+            if (flight.Type == FlightType.Landing)
+                OnPostLanding?.Invoke(runway);
+            else
+                OnPostTakeoff?.Invoke(runway);
+         
             Task.Run(runway.Free);
         }
 

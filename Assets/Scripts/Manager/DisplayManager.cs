@@ -32,6 +32,7 @@ namespace Assets.Scripts.Manager
         //private int _screenHeight;
         //
         private readonly List<string> _logBuffer = new();
+        private readonly Dictionary<int, FlightView> _activeFlights = new();
 
         private static readonly object _logLock = new();
         private static readonly object _consoleLock = new();
@@ -45,6 +46,7 @@ namespace Assets.Scripts.Manager
             _runwayXPos = Locator.Get<List<float>>();
             _flightPool = Locator.Get<IFlightPool>();
             _screenData = Locator.Get<ScreenData>();
+
             //_controller.OnScheduleUpdated += HandleSchedule;
             //_controller.OnLogDiary += HandleYesterdayDiary;
             _controller.OnStatusChanged += HandleStatusChanged;
@@ -52,31 +54,54 @@ namespace Assets.Scripts.Manager
             _controller.OnLandingQueueChanged += HandleLandingQueueChanged;
             _controller.OnTakeoffQueueChanged += HandleTakeoffQueueChanged;
 
+            _controller.OnPreLanding += HandlePreFlight;
+            _controller.OnPreTakeoff += HandlePreFlight;
 
-            _controller.OnPreLanding += HandlePreLanding;
-            _controller.OnFlightLanding += HandleFlightLanding;
+            _controller.OnFlightLanding += HandleStartMovement;
+            _controller.OnFlightTakeoff += HandleStartMovement;
+
+            _controller.OnPostLanding += HandleFlightCompleted;
+            _controller.OnPostTakeoff += HandleFlightCompleted;
+
+        }
+
+        private void HandleFlightCompleted(Runway runway)
+        {
+            if (_activeFlights.TryGetValue(runway.Id, out var flightView))
+            {
+                _flightPool.ReleaseFlight(flightView);
+                _activeFlights.Remove(runway.Id);
+            }
+        }
+
+        private void HandleStartMovement(Runway runway)
+        {
+            if (!_activeFlights.TryGetValue(runway.Id, out var flightView)) return;
+            float travelDistance = runway.RunwayLong;
+            float speed = travelDistance / runway.RealDuration;
             
+            if (runway.CurrentFlight.Type == FlightType.Landing)
+            {
+                flightView.StartLanding(speed);
+            }
+            else
+            {
+                flightView.StartTakeoff(speed);
+            }
         }
 
-        //temp
-        private void HandlePreLanding(Runway runway)
+        private void HandlePreFlight(Runway runway)
         {
-            var position = new Vector3(runway.Position.x, _screenData.ScreenHeight / 2, 0);
-            var flightView = _flightPool.GetFlight(position, Quaternion.identity, 10f);
+            var flight = runway.CurrentFlight;
+            if (flight != null) return;
 
+            Vector3 waitingPos = GetWaitingPosition(runway, flight.Type);
+            Vector3 runwayCenter = runway.Position;
 
-        }
-
-        //private IEnumerator HoldAndLandRoutine()
-
-        private void HandleFlightLanding(Runway runway)
-        {
-            //float xPos = _runwayXPos[runway.Id];
-            //if (runway.CurrentFlight.Type == FlightType.Landing)
-            //{
-            //    var position = Vector3.(xPos, -_screenHeight / 2, 0);
-
-            //}
+            var flightView = _flightPool.GetFlight(waitingPos, Quaternion.identity, 0f);
+            flightView.InitData(flight, runwayCenter, 0f);
+            flightView.StartWaiting(waitingPos);
+            _activeFlights[runway.Id] = flightView;
         }
 
         private void HandleTakeoffQueueChanged(int queueCount)
@@ -101,6 +126,17 @@ namespace Assets.Scripts.Manager
         {
             _uiManager.ActiveRunways();
         }
+
+
+        private Vector3 GetWaitingPosition(Runway runway, FlightType type)
+        {
+            float x = runway.Position.x;
+            float y = _screenData.ScreenHeight / 2f;
+            if (type == FlightType.Takeoff) 
+                y = -y;
+            return new Vector3(x, y, 0);
+        }
+
 
         //public void Start()
         //{

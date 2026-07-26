@@ -14,15 +14,20 @@ namespace Assets.Scripts.Entity
         public Flight? CurrentFlight { get; set; }
         public float RealDuration { get; set; }
         public Vector3 Position { get; set; }
+        public float RunwayLong {  get; set; }
 
         private readonly object _lock = new();
-
         public Action<bool>? OnStateChanged;
 
         public Runway(int id, Action<bool>? onStateChanged = null)
         {
             Id = id;
             OnStateChanged = onStateChanged;
+        }
+
+        public void SetRunwayLong(float runwayLong)
+        {
+            RunwayLong = runwayLong;
         }
 
         public void SetPosition(Vector3 pos)

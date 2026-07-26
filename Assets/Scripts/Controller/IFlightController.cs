@@ -18,14 +18,13 @@ namespace Assets.Scripts.Controller
         public event Action<int>? OnTakeoffQueueChanged;
 
         public event Action<Runway>? OnPreLanding;
-        public event Action? OnPreTakeoff;
+        public event Action<Runway>? OnPreTakeoff;
 
         public event Action<Runway>? OnFlightLanding;
-        public event Action<int>? OnFlightTakeoff;
+        public event Action<Runway>? OnFlightTakeoff;
 
-        //maybe no need
-        public event Action? OnPostLanding;
-        public event Action? OnPostTakeoff;
+        public event Action<Runway>? OnPostLanding;
+        public event Action<Runway>? OnPostTakeoff;
 
         public void LoadData();
         public void StartSimulation();

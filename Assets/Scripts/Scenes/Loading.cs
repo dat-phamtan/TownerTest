@@ -37,6 +37,7 @@ public class Loading : MonoBehaviour
     public float visualLoadDelta = 0.5f;
     private int _runwayCount = 8;
     private int _numFlightPool = 20;
+    private float _scale;
     private List<float> _runwayXPos;
 
 
@@ -47,13 +48,14 @@ public class Loading : MonoBehaviour
         var config = Locator.Get<IConfig>();
 
         _runwayCount = config.Get().RunwayCount;
-
+        _scale = GetScale();
         _runwayXPos = GenerateRunwayXPos();
 
         for (int i = 0; i < _runwayCount; i++)
         {
             Vector3 centerPos = new(_runwayXPos[i], 0f, 0f);
             controller.GetRunways()[i].SetPosition(centerPos);
+            controller.GetRunways()[i].SetRunwayLong(_scale * runwayHeight);
         }
 
 
@@ -101,9 +103,10 @@ public class Loading : MonoBehaviour
         float displayedProgress = 0f;
       
         // instantiate runway
+
         for (int i = 0; i < _runwayCount; i++)
         {
-            InstantiateRunways(i, InitXPos(), GetScale());
+            InstantiateRunways(i, InitXPos(), _scale);
             actualprogress = (float)(0.15 * (i + 1) / _runwayCount);
             yield return null;
         }
@@ -170,7 +173,6 @@ public class Loading : MonoBehaviour
         var rotation = Quaternion.Euler(0, 0, -90);
         var runway = Object.Instantiate(runwayPrefab, spawnPos, rotation, _container.transform);
         runway.GameObject().transform.localScale = new Vector3(scale, scale, scale);
-
         runway.GameObject().SetActive(false);
     }
 

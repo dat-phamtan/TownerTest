@@ -10,6 +10,7 @@ using ControlTowner.Utility;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Unity.Android.Gradle.Manifest;
@@ -29,8 +30,8 @@ namespace Assets.Scripts.Manager
         private GameObject[] _runways;
         //temp
         private List<float> _runwayXPos;
-        //private int _screenHeight;
-        //
+
+        private readonly float _diaryIntervalSeconds = 1f;
         private readonly List<string> _logBuffer = new();
         private readonly Dictionary<int, FlightView> _activeFlights = new();
 
@@ -47,8 +48,9 @@ namespace Assets.Scripts.Manager
             _flightPool = Locator.Get<IFlightPool>();
             _screenData = Locator.Get<ScreenData>();
 
-            //_controller.OnScheduleUpdated += HandleSchedule;
-            //_controller.OnLogDiary += HandleYesterdayDiary;
+            _controller.OnScheduleUpdated += HandleSchedule;
+            _controller.OnLogDiary += HandleYesterdayDiary;
+
             _controller.OnStatusChanged += HandleStatusChanged;
             _controller.OnRunwayInit += HandleRunwayInit;
             _controller.OnLandingQueueChanged += HandleLandingQueueChanged;
@@ -108,9 +110,9 @@ namespace Assets.Scripts.Manager
                 if (flight == null) return;
                 var flightView = _flightPool.GetFlight(waitingPos, Quaternion.identity, 0f);
                 flightView.InitData(flight, runwayCenter, 0f);
-                flightView.StartWaiting(waitingPos);
+                flightView.StartWaiting(waitingPos, flight.FlightSchedule.Code);
                 _activeFlights[id] = flightView;
-                Debug.Log(_activeFlights);
+                //Debug.Log(_activeFlights);
             });
         }
 
@@ -140,68 +142,25 @@ namespace Assets.Scripts.Manager
             Dispatcher.Enqueue(() => _uiManager.ActiveRunways());
         }
 
-
         private Vector3 GetWaitingPosition(Runway runway, FlightType type)
         {
             float x = runway.Position.x;
-            float y = _screenData.ScreenHeight / 200f;
+            float y = runway.RunwayLong/2;
             if (type == FlightType.Takeoff) 
                 y = -y;
             return new Vector3(x, y, 0);
         }
 
+        private void HandleSchedule(List<Flight> flights)
+        {
+            var schedules = flights.Select(f => f.FlightSchedule).ToList();
+            Dispatcher.Enqueue(() => _uiManager.RenderSchedule(schedules));
+        }
 
-        //public void Start()
-        //{
-        //    Task.Run(RenderLoop);
-        //}
-
-        //private async Task RenderLoop()
-        //{
-        //    while (true)
-        //    {
-        //        RenderClock();
-        //        RenderStatus();
-        //        RenderRunways();
-        //        RenderSchedule();
-        //        RenderLog();
-        //        //Test();
-        //        await Task.Delay(200);
-        //    }
-        //}
-
-
-
-        //private void RenderClock()
-        //{
-        //    var time = SimpleClock.Instance.SimulatedTime;
-
-        //}
-
-
-        //private void RenderStatus()
-        //{
-        //    string status = (controller.IsMaintenanceMode()) ? "Status: Maintenance" : "Status: Working";
-        //    WriteAtPosition(status, ROW_STATUS);
-        //}
-
-
-        //private void RenderRunways()
-        //{
-        //    var runways = controller.GetRunways();
-        //    for (int i = 0; i < runways.Length; i++)
-        //    {
-        //        string info;
-        //        var runway = runways[i];
-        //        if (runway.IsOccupied)
-        //            info = $"Runway {runway.id}: [USED] {runway.CurrentFlight?.Code} {runway.CurrentFlight?.Type}";
-        //        else
-        //            info = $"Runway {runway.id}: [EMPTY]";
-
-        //        WriteAtPosition(info, ROW_RUNWAY_HEADER + 1 + i);
-        //    }
-        //}
-
+        private void HandleYesterdayDiary(List<FlightDiary> diary)
+        {
+            Dispatcher.Enqueue(() => _uiManager.ShowDiary(diary, _diaryIntervalSeconds));
+        }
 
         //private void RenderSchedule()
         //{
@@ -256,6 +215,7 @@ namespace Assets.Scripts.Manager
                 _logBuffer.Add(newLog);
                 if (_logBuffer.Count > 50) _logBuffer.RemoveAt(0);
             }
+            Dispatcher.Enqueue(() => _uiManager.AppendLog(newLog));
         }
 
 
@@ -280,23 +240,6 @@ namespace Assets.Scripts.Manager
         //    {
         //        WriteAtPosition(diaryList[i], ROW_DIARY_START + i);
         //        await Task.Delay((int)(intervalSeconds * 1000));
-        //    }
-        //}
-
-        //private static void WriteAtPosition(string text, int row, int col = 0)
-        //{
-        //    lock (consoleLock)
-        //    {
-        //        Console.SetCursorPosition(col, row);
-        //        int availableSpace = Console.WindowWidth - col - 1;
-        //        if (availableSpace <= 0) return;
-
-        //        if (text.Length > availableSpace)
-        //        {
-        //            text = text.Substring(0, availableSpace - 3);
-        //            text += "...";
-        //        }
-        //        Console.Write(text.PadRight(availableSpace));
         //    }
         //}
     }

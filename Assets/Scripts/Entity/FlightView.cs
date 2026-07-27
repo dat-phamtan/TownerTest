@@ -1,11 +1,13 @@
 using Assets.Scripts.Unity;
+using TMPro;
 using UnityEngine;
 
 public class FlightView : MonoBehaviour
 {
     public enum UIState { Waiting, Landing, Takeoff}
-    private UIState _currentState;
+    public TextMeshPro flightCodeText;
 
+    private UIState _currentState;
     private float _forwardSpeed;
     private Vector3 _runwayCenter;
     private Vector3 _waitingPos;
@@ -18,11 +20,11 @@ public class FlightView : MonoBehaviour
         _runwayCenter = runwayCenter;
     }
 
-    public void StartWaiting(Vector3 waitingPos)
+    public void StartWaiting(Vector3 waitingPos, string flightCode)
     {
         _currentState = UIState.Waiting;
         _waitingPos = waitingPos;
-
+        flightCodeText.text = flightCode;
     }
 
     public void StartLanding(float forwardSpeed)

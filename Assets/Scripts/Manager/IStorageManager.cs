@@ -14,5 +14,7 @@ namespace Assets.Scripts.Manager
         public void GenerateDailySchedule(MaintenancePeriod maintenancePeriod, List<Flight>? delayedDailySchedule);
         public List<FlightSchedule> LoadDailySchedule(DateTime today);
         public void SaveDailyLog(FlightDiary diary);
+        public List<FlightDiary> LoadDailyDiary(DateTime date);
+        public void ClearDailyDiary();
     }
 }

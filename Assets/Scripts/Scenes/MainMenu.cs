@@ -32,16 +32,13 @@ public class MainMenu : MonoBehaviour
         Locator.Register<Assets.Scripts.Logger.ILogSource>(eventLogger);
 
         IStorage storage = new LocalStorage();
-        //Locator.Register(storage);
 
         ILandingGenerator generator = new RandomLandingGenerator();
-        //Locator.Register(generator);
 
         IConfig config = new SimulationConfig(storage);
         Locator.Register(config);
 
         IStorageManager storageManager = new FileStorageManager(storage);
-        //Locator.Register(storageManager);
 
         IRunwayManager runwayManager = new RunwayManager();
         Locator.Register(runwayManager);
@@ -54,11 +51,6 @@ public class MainMenu : MonoBehaviour
     private void Start()
     {
         _startButton.onClick.AddListener(HandleStartButton);
-    }
-
-    private void Update()
-    {
-        
     }
 
     private void HandleStartButton()

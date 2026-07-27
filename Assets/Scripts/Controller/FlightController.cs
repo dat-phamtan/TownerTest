@@ -47,7 +47,8 @@ namespace Assets.Scripts.Controller
 
         //IMPLEMENT INTERFACE
         public event Action<List<Flight>>? OnScheduleUpdated;
-        public event Action? OnLogDiary;
+        public event Action<List<FlightDiary>>? OnLogDiary;
+
         public event Action<bool>? OnStatusChanged;
         public event Action? OnRunwayInit;
         public event Action<int>? OnLandingQueueChanged;
@@ -230,16 +231,35 @@ namespace Assets.Scripts.Controller
                         if (runway == null) break;
 
                         Flight? flight = null;
-                        if (_landingQueue.TryDequeue(out Flight? lf))
+                        var random = new Random();
+                        if (_landingQueue.Count > 0 &&  _takeoffQueue.Count > 0)
                         {
-                            flight = lf;
-                            OnLandingQueueChanged?.Invoke(_landingQueue.Count);
+                            if (random.Next(100) < 60)
+                            {
+                                _landingQueue.TryDequeue(out Flight? lf);
+                                flight = lf;
+                                OnLandingQueueChanged?.Invoke(_landingQueue.Count);
+                            }
+                            else
+                            {
+                                _takeoffQueue.TryDequeue(out Flight? tf);
+                                flight = tf;
+                                OnTakeoffQueueChanged?.Invoke(_takeoffQueue.Count);
+                            }
                         }
-                            
-                        else if (_takeoffQueue.TryDequeue(out Flight? tf))
+                        else
                         {
-                            flight = tf;
-                            OnTakeoffQueueChanged?.Invoke(_takeoffQueue.Count);
+                            if (_landingQueue.TryDequeue(out Flight? lf))
+                            {
+                                flight = lf;
+                                OnLandingQueueChanged?.Invoke(_landingQueue.Count);
+                            }
+
+                            else if (_takeoffQueue.TryDequeue(out Flight? tf))
+                            {
+                                flight = tf;
+                                OnTakeoffQueueChanged?.Invoke(_takeoffQueue.Count);
+                            }
                         }
 
                         if (flight != null && runway.AssignFlight(flight))
@@ -345,8 +365,13 @@ namespace Assets.Scripts.Controller
 
             var today = SimpleClock.Instance.SimulatedTime.Date;
             _logger.Log($"[ATC] Start new day ({today:dd/MM/yyyy})");
+
+            var yesterdayDiary = _storageManager.LoadDailyDiary(today.AddDays(-1));
+            _logger.Log($"[ATC] Yesterday's diary count: {yesterdayDiary.Count}");
+            OnLogDiary?.Invoke(yesterdayDiary);
+            _storageManager.ClearDailyDiary();
+
             LoadSchedule(today);
-            OnLogDiary?.Invoke();
         }
 
 

@@ -1,10 +1,15 @@
+using Assets.Scripts.Data;
 using Assets.Scripts.FlightPool;
 using Assets.Scripts.Scenes;
 using ControlTowner.Utility;
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Text;
 using TMPro;
 using UnityEditor.VersionControl;
 using UnityEngine;
+using static UnityEngine.EventSystems.EventTrigger;
 
 public class UIManager : MonoBehaviour, IUIManager
 {
@@ -13,8 +18,13 @@ public class UIManager : MonoBehaviour, IUIManager
     public TextMeshProUGUI status;
     public TextMeshProUGUI landingQueueNum;
     public TextMeshProUGUI takeoffQueueNum;
-    private IFlightPool _flightPool;
-    //public GameObject runway;
+    public TextMeshProUGUI scheduleText;
+    public TextMeshProUGUI diaryText;
+    public TextMeshProUGUI logText;
+
+    private const int MAX_LOG_LINES = 50;
+    private readonly Queue<string> _logLines = new();
+    private Coroutine _diaryRoutine;
 
     public void ChangeLandingQueue(string num)
     {
@@ -45,20 +55,48 @@ public class UIManager : MonoBehaviour, IUIManager
         }
     }
 
-    private void Awake()
+    public void AppendLog(string message)
     {
-        
+        _logLines.Enqueue(message);
+        if (_logLines.Count > MAX_LOG_LINES)
+            _logLines.Dequeue();
+        logText.text = string.Join("\n", _logLines);
     }
 
-    private void OnEnable()
+    public void RenderSchedule(List<FlightSchedule> schedule)
     {
-        
+        if (schedule == null || schedule.Count == 0)
+        {
+            scheduleText.text = "No schedule for today";
+            return;
+        }
+        var sb = new StringBuilder();
+        foreach (var flightSchedule in schedule)
+            sb.AppendLine($"{flightSchedule.ScheduleTime:HH:mm} - {flightSchedule.Code}");
+        scheduleText.text = sb.ToString();
     }
 
-
-    void Start()
+    public void ShowDiary(List<FlightDiary> diary, float intervalSeconds)
     {
-        
+        if (_diaryRoutine != null)
+            StopCoroutine(_diaryRoutine);
+        _diaryRoutine = StartCoroutine(ShowDiaryRoutine(diary, intervalSeconds));
+    }
+
+    private IEnumerator ShowDiaryRoutine(List<FlightDiary> diary, float intervalSeconds)
+    {
+        diaryText.text = "";
+        if (diary == null || diary.Count == 0)
+        {
+            diaryText.text = "No diary for now!";
+            yield break;
+        }
+        foreach (var flightDiary in diary)
+        {
+            string action = flightDiary.IsLanding == 'L' ? "Landing" : "Takeoff";
+            diaryText.text += $"{flightDiary.DiaryTime:HH:mm:ss} - {flightDiary.Code} - Runway {flightDiary.RunwayIndex} - {action}\n";
+            yield return new WaitForSeconds(intervalSeconds);
+        }
     }
 
     // Update is called once per frame

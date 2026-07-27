@@ -11,7 +11,7 @@ namespace Assets.Scripts.Controller
     public interface IFlightController
     {
         public event Action<List<Flight>> OnScheduleUpdated;
-        public event Action OnLogDiary;
+        public event Action<List<FlightDiary>> OnLogDiary;
         public event Action<bool> OnStatusChanged;
         public event Action? OnRunwayInit;
         public event Action<int>? OnLandingQueueChanged;

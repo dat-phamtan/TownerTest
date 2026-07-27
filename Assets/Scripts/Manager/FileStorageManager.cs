@@ -20,6 +20,8 @@ namespace Assets.Scripts.Manager
         private const string SCHEDULE_FILE_NAME = "FlightSchedule.json";
         private const string DIARY_FILE_NAME = "FlightDiary.json";
 
+        private readonly object _diaryLock = new();
+
         public FileStorageManager(IStorage storage)
         {
             _storage = storage;
@@ -68,7 +70,29 @@ namespace Assets.Scripts.Manager
 
         public void SaveDailyLog(FlightDiary diary)
         {
-            _storage.Append(DIARY_FILE_NAME, diary);
+            lock (_diaryLock)
+            {
+                var list = _storage.Load<List<FlightDiary>>(DIARY_FILE_NAME, new List<FlightDiary>());
+                list ??= new List<FlightDiary>();
+                list.Add(diary);
+                _storage.Save(DIARY_FILE_NAME, list);
+            }
+        }
+
+        public List<FlightDiary> LoadDailyDiary(DateTime date)
+        {
+            lock (_diaryLock)
+            {
+                return _storage.Load<List<FlightDiary>>(DIARY_FILE_NAME, new List<FlightDiary>()) ?? new List<FlightDiary>();
+            }
+        }
+
+        public void ClearDailyDiary()
+        {
+            lock (_diaryLock)
+            {
+                _storage.Save(DIARY_FILE_NAME, new List<FlightDiary>());
+            }
         }
 
 

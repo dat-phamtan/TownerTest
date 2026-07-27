@@ -107,7 +107,7 @@ public class Loading : MonoBehaviour
         }
 
         // instantiate plane pool
-        _flightPool.PoolInit(_numFlightPool, runwayWidth/planeWidth);
+        _flightPool.PoolInit(_numFlightPool, runwayWidth * _scale/planeWidth);
         for (int i = 0; i < _numFlightPool; i++)
         {
             actualprogress += (float)(0.15 * (i + 1)/ _numFlightPool);
@@ -164,7 +164,7 @@ public class Loading : MonoBehaviour
     private float GetScale()
     {
         int maxNumRunway = (int)Math.Floor(_screenWidth / (200f * runwayWidth));
-        Debug.Log(maxNumRunway);
+        //Debug.Log(maxNumRunway);
         float result = 1.0f;
 
         if (_runwayCount > maxNumRunway)

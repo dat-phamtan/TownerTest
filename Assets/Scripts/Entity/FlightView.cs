@@ -45,6 +45,7 @@ public class FlightView : MonoBehaviour
                 transform.SetPositionAndRotation(_waitingPos, Quaternion.LookRotation(_runwayCenter));
                 break;
             case UIState.Landing:
+                //transform.rotation = Quaternion.LookRotation(_runwayCenter);
                 transform.Translate(Vector3.down * _forwardSpeed * Time.deltaTime);
                 break;
             case UIState.Takeoff:

@@ -8,6 +8,7 @@ namespace Assets.Scripts.IO
     public class LocalStorage : IStorage
     {
         private readonly string _saveDirectory;
+        private readonly object _fileLock = new();
 
         public LocalStorage()
         {
@@ -20,12 +21,14 @@ namespace Assets.Scripts.IO
             string filePath = _saveDirectory + "/" + fileName; 
             if (!File.Exists(filePath))
                     return defaultData;
-
-            string loadedData = File.ReadAllText(filePath);
-            Debug.Log(loadedData);
-            Debug.Log($"Load from: {filePath}");
-            //return JsonUtility.FromJson<T>(loadedData);
-            return JsonConvert.DeserializeObject<T>(loadedData);
+            lock( _fileLock )
+            {
+                string loadedData = File.ReadAllText(filePath);
+                //Debug.Log(loadedData);
+                //Debug.Log($"Load from: {filePath}");
+                //return JsonUtility.FromJson<T>(loadedData);
+                return JsonConvert.DeserializeObject<T>(loadedData);
+            }
         }
 
         public void Save<T>(string fileName, T data)
@@ -33,18 +36,24 @@ namespace Assets.Scripts.IO
             string filePath = _saveDirectory + "/" + fileName;
             //string jsonData = JsonUtility.ToJson(data);
             string jsonData = JsonConvert.SerializeObject(data, Formatting.Indented);
-            Debug.Log(jsonData);
-            File.WriteAllText(filePath, jsonData);
-            Debug.Log($"Save to: {filePath}");
+            //Debug.Log(jsonData);
+            lock( _fileLock )
+            {
+                File.WriteAllText(filePath, jsonData);
+            }
+            //Debug.Log($"Save to: {filePath}");
         }
 
         public void Append<T>(string fileName, T data)
         {
             string filePath = _saveDirectory + "/" + fileName;
             string jsonData = JsonConvert.SerializeObject(data, Formatting.Indented);
-            Debug.Log(jsonData);
-            File.AppendAllText(filePath, jsonData);
-            Debug.Log($"Append to: {filePath}");
+            //Debug.Log(jsonData);
+            lock ( _fileLock)
+            {
+                File.AppendAllText(filePath, jsonData);
+            }
+            //Debug.Log($"Append to: {filePath}");
         }
     }
 }

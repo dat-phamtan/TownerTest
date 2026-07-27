@@ -67,52 +67,91 @@ namespace Assets.Scripts.Manager
 
         private void HandleFlightCompleted(Runway runway)
         {
+            var id = runway.Id;
+
             Dispatcher.Enqueue(() =>
             {
-                if (_activeFlights.TryGetValue(runway.Id, out var flightView))
+                if (_activeFlights.TryGetValue(id, out var flightView))
                 {
                     _flightPool.ReleaseFlight(flightView);
-                    _activeFlights.Remove(runway.Id);
+                    _activeFlights.Remove(id);
                 }
             });
         }
 
         private void HandleStartMovement(Runway runway)
         {
+            var id = runway.Id;
+            var travelDistance = runway.RunwayLong;
+            var realDuration = runway.RealDuration;
+            var type = runway.CurrentFlight.Type;
             Dispatcher.Enqueue(() =>
             {
-                if (!_activeFlights.TryGetValue(runway.Id, out var flightView)) return;
-                float travelDistance = runway.RunwayLong;
-                Debug.Log(travelDistance);
-                float speed = travelDistance / runway.RealDuration;
+                if (!_activeFlights.TryGetValue(id, out var flightView)) return;
+                float speed = travelDistance / realDuration;
 
-                if (runway.CurrentFlight.Type == FlightType.Landing)
-                {
+                if (type == FlightType.Landing)
                     flightView.StartLanding(speed);
-                }
                 else
-                {
                     flightView.StartTakeoff(speed);
-                }
             });
         }
 
         private void HandlePreFlight(Runway runway)
         {
+            var flight = runway.CurrentFlight;
+            var waitingPos = GetWaitingPosition(runway, flight.Type);
+            var runwayCenter = runway.Position;
+            var id = runway.Id;
             Dispatcher.Enqueue(() =>
             {
-                var flight = runway.CurrentFlight;
                 if (flight == null) return;
-
-                Vector3 waitingPos = GetWaitingPosition(runway, flight.Type);
-                Vector3 runwayCenter = runway.Position;
-
                 var flightView = _flightPool.GetFlight(waitingPos, Quaternion.identity, 0f);
                 flightView.InitData(flight, runwayCenter, 0f);
                 flightView.StartWaiting(waitingPos);
-                _activeFlights[runway.Id] = flightView;
+                _activeFlights[id] = flightView;
+                Debug.Log(_activeFlights);
             });
         }
+
+        //private void HandlePreFlight(Runway runway)
+        //{
+        //    var flight = runway.CurrentFlight;
+        //    if (flight == null) { UnityEngine.Debug.Log($"[DBG] PreFlight SKIP runway={runway.Id} - CurrentFlight null"); return; }
+        //    var runwayId = runway.Id;
+        //    var runwayPos = runway.Position;
+        //    Vector3 waitingPos = GetWaitingPosition(runway, flight.Type);
+        //    UnityEngine.Debug.Log($"[DBG] PreFlight ENQUEUE runway={runwayId} flight={flight.FlightSchedule.Code}");
+
+        //    Dispatcher.Enqueue(() =>
+        //    {
+
+        //        var flightView = _flightPool.GetFlight(waitingPos, Quaternion.identity, 0f);
+        //        flightView.InitData(flight, runwayPos, 0f);
+        //        flightView.StartWaiting(waitingPos);
+        //        _activeFlights[runwayId] = flightView;
+        //        UnityEngine.Debug.Log($"[DBG] PreFlight SET runway={runwayId} flight={flight.FlightSchedule.Code} activeCount={_activeFlights.Count}");
+        //    });
+        //}
+
+        //private void HandleFlightCompleted(Runway runway)
+        //{
+        //    var runwayId = runway.Id;
+        //    UnityEngine.Debug.Log($"[DBG] Completed ENQUEUE runway={runwayId}");
+        //    Dispatcher.Enqueue(() =>
+        //    {
+        //        if (_activeFlights.TryGetValue(runwayId, out var flightView))
+        //        {
+        //            _flightPool.ReleaseFlight(flightView);
+        //            _activeFlights.Remove(runwayId);
+        //            UnityEngine.Debug.Log($"[DBG] Completed RELEASE runway={runwayId} activeCount={_activeFlights.Count}");
+        //        }
+        //        else
+        //        {
+        //            UnityEngine.Debug.Log($"[DBG] Completed MISS runway={runwayId} — no entry in _activeFlights!");
+        //        }
+        //    });
+        //}
 
         private void HandleTakeoffQueueChanged(int queueCount)
         {

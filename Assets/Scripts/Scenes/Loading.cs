@@ -7,6 +7,7 @@ using Assets.Scripts.IO;
 using Assets.Scripts.Manager;
 using Assets.Scripts.Utility;
 using ControlTowner.Utility;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -15,6 +16,7 @@ using Unity.VisualScripting;
 using UnityEditor.ShaderGraph.Internal;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.XR;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 
@@ -23,18 +25,18 @@ public class Loading : MonoBehaviour
     public TextMeshProUGUI progress;
     public InputActionReference continueAction;
     public FlightView flightPrefab;
-    public Object runwayPrefab;
+    public UnityEngine.Object runwayPrefab;
     private GameObject _container;
     private IFlightPool _flightPool;
 
-    public float runwayWidth = 1.8f;
-    public float runwayHeight = 11.5f;
-    public float planeWidth = 4.9f;
-    public float planeHeight = 5.1f;
+    public float runwayWidth = 1.72f;
+    public float runwayHeight = 11.42f;
+    public float planeWidth = 4.88f;
+    public float planeHeight = 5.11f;
 
     private readonly int _screenWidth = Screen.width;
     private readonly int _screenHeight = Screen.height;
-    public float visualLoadDelta = 0.5f;
+    public float visualLoadDelta = 0.9f;
     private int _runwayCount = 8;
     private int _numFlightPool = 20;
     private float _scale;
@@ -50,27 +52,9 @@ public class Loading : MonoBehaviour
         _runwayCount = config.Get().RunwayCount;
         _scale = GetScale();
         _runwayXPos = GenerateRunwayXPos();
-
-        for (int i = 0; i < _runwayCount; i++)
-        {
-            Vector3 centerPos = new(_runwayXPos[i], 0f, 0f);
-            controller.GetRunways()[i].SetPosition(centerPos);
-            controller.GetRunways()[i].SetRunwayLong(_scale * runwayHeight);
-        }
-
-
         Locator.Register(_runwayXPos);
-        Locator.Register(_screenHeight);
+        RunwayInit(controller);
         FlightPoolInit();
-
-    }
-
-    private void FlightPoolInit()
-    {
-        _container = new GameObject("Container");
-        DontDestroyOnLoad(_container);
-        _flightPool = new FlightPool(flightPrefab, _container.transform);
-        Locator.Register<IFlightPool>(_flightPool);
     }
 
     private void OnEnable()
@@ -90,11 +74,23 @@ public class Loading : MonoBehaviour
         StartCoroutine(LoadScene());
     }
 
-    void Update()
+    private void RunwayInit(IFlightController controller)
     {
-        
+        for (int i = 0; i < _runwayCount; i++)
+        {
+            Vector3 centerPos = new(_runwayXPos[i], 0f, 0f);
+            controller.GetRunways()[i].SetPosition(centerPos);
+            controller.GetRunways()[i].SetRunwayLong(_scale * runwayHeight);
+        }
     }
 
+    private void FlightPoolInit()
+    {
+        _container = new GameObject("Container");
+        DontDestroyOnLoad(_container);
+        _flightPool = new FlightPool(flightPrefab, _container.transform);
+        Locator.Register<IFlightPool>(_flightPool);
+    }
 
     IEnumerator LoadScene()
     {
@@ -103,7 +99,6 @@ public class Loading : MonoBehaviour
         float displayedProgress = 0f;
       
         // instantiate runway
-
         for (int i = 0; i < _runwayCount; i++)
         {
             InstantiateRunways(i, InitXPos(), _scale);
@@ -142,54 +137,43 @@ public class Loading : MonoBehaviour
         }
     }
 
-
     private List<float> GenerateRunwayXPos()
     {
+        float x = InitXPos();
         List<float> runwaysXPos = new();
         if (_runwayCount <= 0) return runwaysXPos;
 
-        int maxNumRunway = (int)(_screenWidth / (200 * runwayWidth));
-
-        float x, scale;
-        x = -(_screenWidth / 400) + runwayWidth / 2 - 0.5f;
         runwaysXPos.Add(x);
 
-        if (_runwayCount <= maxNumRunway)
-            scale = 1;
-        else
-            scale = _screenWidth / (200 * _runwayCount * runwayWidth);
-
-        for (int i = 0; i < _runwayCount; i++)
+        for (int i = 1; i < _runwayCount; i++)
         {
-            runwaysXPos.Add(x + i * runwayWidth * scale);
+            runwaysXPos.Add(x + i * runwayWidth * _scale);
         }
         return runwaysXPos;
     }
-
 
     private void InstantiateRunways(int index, float x, float scale)
     {
         var spawnPos = new Vector3((float)(x + index * runwayWidth * scale), 0, 0);
         var rotation = Quaternion.Euler(0, 0, -90);
-        var runway = Object.Instantiate(runwayPrefab, spawnPos, rotation, _container.transform);
+        var runway = UnityEngine.Object.Instantiate(runwayPrefab, spawnPos, rotation, _container.transform);
         runway.GameObject().transform.localScale = new Vector3(scale, scale, scale);
         runway.GameObject().SetActive(false);
     }
 
-
     private float GetScale()
     {
-        int maxNumRunway = (int)(_screenWidth / (200 * runwayWidth));
+        int maxNumRunway = (int)Math.Floor(_screenWidth / (200f * runwayWidth));
+        Debug.Log(maxNumRunway);
         float result = 1.0f;
 
         if (_runwayCount > maxNumRunway)
-            result = _screenWidth / (200 * _runwayCount * runwayWidth);
+            result = (float)_screenWidth / (200f * _runwayCount * runwayWidth);
         return result;
     }
 
-
     private float InitXPos()
     {
-        return -(_screenWidth / 400) + runwayWidth / 2 - 0.5f;
+        return -(float)(_screenWidth / 400f) + runwayWidth / 2f;
     }
 }

@@ -45,10 +45,10 @@ public class FlightView : MonoBehaviour
                 transform.SetPositionAndRotation(_waitingPos, Quaternion.LookRotation(_runwayCenter));
                 break;
             case UIState.Landing:
-                transform.Translate(Vector3.forward * _forwardSpeed * Time.deltaTime);
+                transform.Translate(Vector3.down * _forwardSpeed * Time.deltaTime);
                 break;
             case UIState.Takeoff:
-                transform.Translate(Vector3.forward * _forwardSpeed * Time.deltaTime);
+                transform.Translate(Vector3.up * _forwardSpeed * Time.deltaTime);
                 break;
         }
     }

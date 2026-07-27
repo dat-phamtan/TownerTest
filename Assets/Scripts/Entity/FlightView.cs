@@ -29,12 +29,14 @@ public class FlightView : MonoBehaviour
     {
         _currentState = UIState.Landing;
         _forwardSpeed = forwardSpeed;
+        transform.rotation = Quaternion.Euler(0, 0, 180);
     }
 
     public void StartTakeoff(float forwardSpeed)
     {
         _currentState = UIState.Takeoff;
         _forwardSpeed = forwardSpeed;
+        //transform.rotat
     }
 
     private void Update()
@@ -42,11 +44,17 @@ public class FlightView : MonoBehaviour
         switch (_currentState)
         {
             case UIState.Waiting:
-                transform.SetPositionAndRotation(_waitingPos, Quaternion.LookRotation(_runwayCenter));
+                if (_flightData.Type == FlightType.Landing)
+                    transform.rotation = Quaternion.Euler(0, 0, 180);
+                else
+                    transform.rotation = Quaternion.Euler(0, 0, 0);
+
+                transform.position = _waitingPos;
+                //transform.SetPositionAndRotation(_waitingPos, Quaternion.LookRotation(_runwayCenter));
                 break;
             case UIState.Landing:
                 //transform.rotation = Quaternion.LookRotation(_runwayCenter);
-                transform.Translate(Vector3.down * _forwardSpeed * Time.deltaTime);
+                transform.Translate(Vector3.up * _forwardSpeed * Time.deltaTime);
                 break;
             case UIState.Takeoff:
                 transform.Translate(Vector3.up * _forwardSpeed * Time.deltaTime);

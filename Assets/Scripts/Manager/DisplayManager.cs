@@ -114,66 +114,30 @@ namespace Assets.Scripts.Manager
             });
         }
 
-        //private void HandlePreFlight(Runway runway)
-        //{
-        //    var flight = runway.CurrentFlight;
-        //    if (flight == null) { UnityEngine.Debug.Log($"[DBG] PreFlight SKIP runway={runway.Id} - CurrentFlight null"); return; }
-        //    var runwayId = runway.Id;
-        //    var runwayPos = runway.Position;
-        //    Vector3 waitingPos = GetWaitingPosition(runway, flight.Type);
-        //    UnityEngine.Debug.Log($"[DBG] PreFlight ENQUEUE runway={runwayId} flight={flight.FlightSchedule.Code}");
-
-        //    Dispatcher.Enqueue(() =>
-        //    {
-
-        //        var flightView = _flightPool.GetFlight(waitingPos, Quaternion.identity, 0f);
-        //        flightView.InitData(flight, runwayPos, 0f);
-        //        flightView.StartWaiting(waitingPos);
-        //        _activeFlights[runwayId] = flightView;
-        //        UnityEngine.Debug.Log($"[DBG] PreFlight SET runway={runwayId} flight={flight.FlightSchedule.Code} activeCount={_activeFlights.Count}");
-        //    });
-        //}
-
-        //private void HandleFlightCompleted(Runway runway)
-        //{
-        //    var runwayId = runway.Id;
-        //    UnityEngine.Debug.Log($"[DBG] Completed ENQUEUE runway={runwayId}");
-        //    Dispatcher.Enqueue(() =>
-        //    {
-        //        if (_activeFlights.TryGetValue(runwayId, out var flightView))
-        //        {
-        //            _flightPool.ReleaseFlight(flightView);
-        //            _activeFlights.Remove(runwayId);
-        //            UnityEngine.Debug.Log($"[DBG] Completed RELEASE runway={runwayId} activeCount={_activeFlights.Count}");
-        //        }
-        //        else
-        //        {
-        //            UnityEngine.Debug.Log($"[DBG] Completed MISS runway={runwayId} — no entry in _activeFlights!");
-        //        }
-        //    });
-        //}
-
         private void HandleTakeoffQueueChanged(int queueCount)
         {
-            _uiManager.ChangeTakeoffQueue("x" + queueCount);
+            Dispatcher.Enqueue(() => _uiManager.ChangeTakeoffQueue("x" + queueCount));
         }
 
         private void HandleLandingQueueChanged(int queueCount)
         {
-            _uiManager.ChangeLandingQueue("x" + queueCount);
+            Dispatcher.Enqueue(() => _uiManager.ChangeLandingQueue("x" + queueCount));
         }
 
         private void HandleStatusChanged(bool status)
         {
-            if (status)
-                _uiManager.ChangeStatus("Working");
-            else
-                _uiManager.ChangeStatus("Maintenance");
+            Dispatcher.Enqueue(() =>
+            {
+                if (status)
+                    _uiManager.ChangeStatus("Working");
+                else
+                    _uiManager.ChangeStatus("Maintenance");
+            });
         }
 
         private void HandleRunwayInit()
         {
-            _uiManager.ActiveRunways();
+            Dispatcher.Enqueue(() => _uiManager.ActiveRunways());
         }
 
 

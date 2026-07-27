@@ -153,7 +153,12 @@ namespace Assets.Scripts.Manager
 
         private void HandleSchedule(List<Flight> flights)
         {
-            var schedules = flights.Select(f => f.FlightSchedule).ToList();
+            //var schedules = flights.Select(f => f.FlightSchedule).ToList();
+            var schedules = new List<FlightSchedule>();
+            foreach (var schedule in schedules)
+            {
+                schedules.Add(schedule);
+            }
             Dispatcher.Enqueue(() => _uiManager.RenderSchedule(schedules));
         }
 
@@ -161,52 +166,6 @@ namespace Assets.Scripts.Manager
         {
             Dispatcher.Enqueue(() => _uiManager.ShowDiary(diary, _diaryIntervalSeconds));
         }
-
-        //private void RenderSchedule()
-        //{
-        //    List<Flight> scheduleList;
-        //    lock (scheduleLock)
-        //    {
-        //        scheduleList = new(schedule);
-        //    }
-
-        //    int numSchedule = scheduleList.Count;
-        //    for (int i = 0; i < numSchedule; i++)
-        //    {
-        //        string line = "";
-        //        if (i < scheduleList.Count) line = $"{scheduleList[i].ScheduledTime.ToString("dd/MM/yyyy HH:mm")} {scheduleList[i].Code} {scheduleList[i].State}";
-        //        WriteAtPosition(line, ROW_SCHEDULE_START + i, SECOND_COL_NUMS);
-        //    }
-        //}
-
-
-        //private void UpdateSchedule(List<Flight> flights)
-        //{
-        //    lock (scheduleLock)
-        //    {
-        //        schedule = flights;
-        //    }
-        //}
-
-
-        //private void RenderLog()
-        //{
-        //    List<string> log;
-        //    lock (logLock)
-        //    {
-        //        log = new(logBuffer);
-        //    }
-
-        //    for (int i = 0; i < MAX_LOG_LINES; i++)
-        //    {
-        //        string line = " ";
-        //        if (i < log.Count)
-        //            line += log[log.Count - 1 - i];
-        //        WriteAtPosition(line.PadRight(50), ROW_LOG_START + i, SECOND_COL_NUMS);
-
-        //    }
-        //}
-
 
         private void AddLog(string newLog)
         {
@@ -217,30 +176,5 @@ namespace Assets.Scripts.Manager
             }
             Dispatcher.Enqueue(() => _uiManager.AppendLog(newLog));
         }
-
-
-        //private async void HandleYesterdayDiary()
-        //{
-        //    await ShowYesterdayDiaryAsync(1);
-        //}
-
-
-        //private async Task ShowYesterdayDiaryAsync(float intervalSeconds = 1)
-        //{
-        //    string diary = FlightDiaryIO.Load().Trim();
-        //    FlightDiaryIO.ClearDiary();
-        //    if (string.IsNullOrWhiteSpace(diary))
-        //    {
-        //        AddLog("[ATC] Tommorrow's diary count: 0");
-        //        return;
-        //    }
-        //    string[] diaryList = diary.Split('\n');
-        //    AddLog($"[ATC] Tommorrow's diary count: {diaryList.Length}");
-        //    for (int i = 0; i < diaryList.Length; i++)
-        //    {
-        //        WriteAtPosition(diaryList[i], ROW_DIARY_START + i);
-        //        await Task.Delay((int)(intervalSeconds * 1000));
-        //    }
-        //}
     }
 }

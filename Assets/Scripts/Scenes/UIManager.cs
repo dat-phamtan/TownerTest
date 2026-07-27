@@ -22,7 +22,7 @@ public class UIManager : MonoBehaviour, IUIManager
     public TextMeshProUGUI diaryText;
     public TextMeshProUGUI logText;
 
-    private const int MAX_LOG_LINES = 50;
+    private const int MAX_LOG_LINES = 10;
     private readonly Queue<string> _logLines = new();
     private Coroutine _diaryRoutine;
 
